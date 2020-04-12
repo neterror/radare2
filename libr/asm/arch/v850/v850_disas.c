@@ -5,6 +5,7 @@
 #include <r_endian.h>
 
 #include "v850_disas.h"
+#include "v850e2m_disas.h"
 
 static const char *instrs[] = {
 	[V850_MOV]	= "mov",
@@ -298,7 +299,11 @@ static int decode_extended(const ut8 *instr, int len, struct v850_cmd *cmd) {
 }
 
 int v850_decode_command (const ut8 *instr, int len, struct v850_cmd *cmd) {
-	int ret;
+    //try first to decode as the new opcode format
+	int ret = v850e2m_try_decode(instr, len, cmd);
+    if (ret != -1) {
+        return ret;
+    }
 
 	if (len < 2) {
 		return -1;

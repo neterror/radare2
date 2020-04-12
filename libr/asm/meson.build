@@ -147,6 +147,7 @@ r_asm_sources = [
   'arch/tricore/gnu/tricore-opc.c',
   'arch/v810/v810_disas.c',
   'arch/v850/v850_disas.c',
+  'arch/v850/v850e2m_disas.c',
   'arch/vax/vax-dis.c',
   'arch/wasm/wasm.c',
   'arch/whitespace/wsdis.c',
