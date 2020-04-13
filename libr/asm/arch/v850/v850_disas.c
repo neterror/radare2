@@ -101,6 +101,26 @@ static const char *conds[] = {
 	[V850_COND_GT]	= "gt",
 };
 
+static int decode_v850e3_zxb(const ut8* instr, int len, struct v850_cmd *cmd) {
+    ut16 in = r_read_le16 (instr);
+	snprintf (cmd->instr, V850_INSTR_MAXLEN - 1, "%s", "zxb");
+    snprintf (cmd->operands, V850_INSTR_MAXLEN - 1, "r%u",  get_reg1 (in));
+	return 2;
+}
+
+static int decode_v850e3_mov(const ut8* instr, int len, struct v850_cmd *cmd) {
+    if (len < 6) {
+        return -1;
+    }
+	ut16 word1 = r_read_le16 (instr);
+	ut32 value = r_read_at_le32 (instr, 2);
+    ut8 R = word1 & 0x1F;
+	snprintf (cmd->instr, V850_INSTR_MAXLEN - 1, "%s", "mov");
+    snprintf (cmd->operands, V850_INSTR_MAXLEN - 1, "0x%x,r%u",  value, R);
+    return 6;
+}
+
+
 static int decode_reg_reg(const ut16 instr, struct v850_cmd *cmd) {
 	ut8 opcode = get_opcode (instr);
 
@@ -298,17 +318,40 @@ static int decode_extended(const ut8 *instr, int len, struct v850_cmd *cmd) {
 	return 4;
 }
 
+//reg2 (first 5 bits) for these is always 0, the next 6 bits collide with existing instruction
+int v850e3_instruction(const ut8* instr, int len, struct v850_cmd *cmd) {
+    int ret = -1;
+    ut16 in = r_read_le16 (instr);
+    int opcode = get_opcode(in);
+    switch(opcode) {
+    case V850_SATSUBR:
+        ret = decode_v850e3_zxb(instr, len, cmd);
+        break;
+    case V850_MOVEA:
+        ret = decode_v850e3_mov(instr, len, cmd);
+        break;
+    }
+    return ret;
+}
+
 int v850_decode_command (const ut8 *instr, int len, struct v850_cmd *cmd) {
-    //try first to decode as the new opcode format
+	if (len < 2) {
+		return -1;
+	}
+
+    //try first to decode as the new opcode format, otherwise
 	int ret = rh850_try_decode(instr, len, cmd);
     if (ret != -1) {
         return ret;
     }
 
-	if (len < 2) {
-		return -1;
-	}
 	ut16 in = r_read_le16 (instr);
+    if (get_reg2(in) == 0) {
+        ret = v850e3_instruction(instr, len, cmd);
+        if (ret != -1) {
+            return ret;
+        }
+    }
 
 	switch (get_opcode (in)) {
 	case V850_MOV:

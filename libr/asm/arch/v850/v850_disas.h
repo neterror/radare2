@@ -12,7 +12,7 @@ enum v850_cmd_opcodes {
 	V850_NOT	= 0x1,
 	V850_DIVH	= 0x2,
 	V850_JMP	= 0x3,
-	V850_SATSUBR	= 0x4,
+	V850_SATSUBR= 0x4,
 	V850_SATSUB	= 0x5,
 	V850_SATADD	= 0x6,
 	V850_MULH	= 0x7,

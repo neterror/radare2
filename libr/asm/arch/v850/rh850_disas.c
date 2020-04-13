@@ -43,6 +43,7 @@ static const char *conds[] = {
 };
     
 static const Instruction instructions[] = {
+    //mnemonic      pattern     mask
     {"jarl",      0x07800000, 0x07C00001,  JARL_F1,    true}, //if reg2 should not be 0
     {"prepare",   0x07800001, 0xFFC0001F,  PREPARE_F1, false}, 
     {"ld.b",      0x07000000, 0x07E00000,  LD_B_F1,    false},
@@ -145,16 +146,9 @@ static int decode_jarl_f1(const ut8 *instr, int len, struct v850_cmd *cmd) {
 static int decode_prepare_f1(const ut8 *instr, int len, struct v850_cmd *cmd) {
 	ut16 word1 = r_read_le16 (instr);
 	ut16 word2 = r_read_at_le16 (instr, 2);
-
-    if ((word2 & 0x3) == 3) {
-        //format2. todo
-    } else {
-        //format1
-        ut8 imm5 = (word1 >> 1) & 0x1F;
-        snprintf (cmd->operands, V850_INSTR_MAXLEN - 1, "{%s},%d",
-                  prepare_registers(word1, word2), imm5);
-    }
-
+    ut8 imm5 = (word1 >> 1) & 0x1F;
+    snprintf (cmd->operands, V850_INSTR_MAXLEN - 1, "{%s},%d",
+              prepare_registers(word1, word2), imm5);
 	return 4;
 }
 
@@ -190,7 +184,6 @@ static int decode_bcond_f1(const ut8 *instr, int len, struct v850_cmd *cmd) {
     if (msb) {
         disp |= 0xFFFF0000;
     }
-    printf("disp = %x\n", disp);
     snprintf (cmd->operands, V850_INSTR_MAXLEN - 1, "0x%x",  cmd->addr + disp);
     return 4;
 }
